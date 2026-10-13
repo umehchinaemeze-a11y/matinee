@@ -1,17 +1,53 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Header from "@/components/Header";
 import SearchBar from "@/components/SearchBar";
 import MovieSection from "@/components/MovieSection";
 import MovieCard from "@/components/MovieCard";
-import { movies } from "@/lib/movies";
+import type { Movie } from "@/lib/movies";
 
 export default function Home() {
   const [query, setQuery] = useState("");
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [reloadToken, setReloadToken] = useState(0);
 
-  const featured = useMemo(() => movies.filter((movie) => movie.featured), []);
-  const popular = useMemo(() => movies.filter((movie) => !movie.featured), []);
+  useEffect(() => {
+    let active = true;
+
+    async function load() {
+      try {
+        const response = await fetch("/api/movies");
+        if (!response.ok) throw new Error("Unable to load movies.");
+
+        const data: Movie[] = await response.json();
+        if (active) setMovies(data);
+      } catch {
+        if (active) {
+          setError("Could not load movies. Check your connection and try again.");
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    void load();
+
+    return () => {
+      active = false;
+    };
+  }, [reloadToken]);
+
+  const featured = useMemo(
+    () => movies.filter((movie) => movie.featured),
+    [movies]
+  );
+  const popular = useMemo(
+    () => movies.filter((movie) => !movie.featured),
+    [movies]
+  );
 
   const normalized = query.trim().toLowerCase();
   const searching = normalized.length > 0;
@@ -29,7 +65,7 @@ export default function Home() {
         .toLowerCase();
       return haystack.includes(normalized);
     });
-  }, [normalized, searching]);
+  }, [normalized, searching, movies]);
 
   return (
     <main id="home" className="min-h-screen bg-[#0b0b0f] text-[#f5f1e8]">
@@ -53,7 +89,29 @@ export default function Home() {
         </div>
       </section>
 
-      {searching ? (
+      {loading ? (
+        <section className="mx-auto max-w-7xl px-6 py-16 md:px-10">
+          <p className="text-sm text-white/55">Loading movies…</p>
+        </section>
+      ) : error ? (
+        <section className="mx-auto max-w-7xl px-6 py-16 md:px-10">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-6 py-12 text-center">
+            <h2 className="text-xl font-bold">Something went wrong</h2>
+            <p className="mx-auto mt-2 max-w-md text-white/55">{error}</p>
+            <button
+              type="button"
+              onClick={() => {
+                setLoading(true);
+                setError("");
+                setReloadToken((token) => token + 1);
+              }}
+              className="mt-6 rounded-full bg-[#f5c518] px-6 py-3 font-semibold text-[#0b0b0f] transition hover:bg-white"
+            >
+              Try again
+            </button>
+          </div>
+        </section>
+      ) : searching ? (
         <section className="mx-auto max-w-7xl px-6 py-12 md:px-10">
           <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#f5c518]">
             Search results
@@ -126,7 +184,7 @@ export default function Home() {
 
       <footer className="border-t border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-6 py-8 text-sm text-white/45 sm:flex-row sm:items-center sm:justify-between md:px-10">
-          <p>© 2026 Matinee. Demo built with local mock data.</p>
+          <p>© 2026 Matinee. Data served from PostgreSQL via the movies API.</p>
           <p>Next.js · React · Tailwind CSS</p>
         </div>
       </footer>
