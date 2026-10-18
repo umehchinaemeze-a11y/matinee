@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Matinee</string>
+    <string name="title_activity_main">Matinee</string>
+    <string name="package_name">com.matinee.app</string>
+    <string name="custom_url_scheme">com.matinee.app</string>
+</resources>
