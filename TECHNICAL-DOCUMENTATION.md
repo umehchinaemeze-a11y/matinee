@@ -328,6 +328,6 @@ available.
 - Search is performed entirely on the client against the in-memory catalog; there is
   no server-side search endpoint.
 - Poster images are CSS gradient placeholders, not real image assets.
-- No automated tests, load testing, Figma design, or demo video are present.
+- Automated tests are not present in the repository. Baseline load-test results are documented in LOAD-TEST-RESULTS.md. Links to the external Figma prototype and demo video are recorded in the root SUBMISSION.md and PROJECT-INVENTORY.md (neither resource is stored directly inside this repository).
 - Capacitor's `server.url` approach is intended for development, not for a
   store-ready release.
