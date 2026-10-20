@@ -7,8 +7,8 @@ const config: CapacitorConfig = {
   server: {
     url: 'https://matinee-two.vercel.app/',
     cleartext: false,
+    androidScheme: 'https',
   },
-  androidScheme: 'https',
 };
 
 export default config;

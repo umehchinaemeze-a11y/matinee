@@ -6,6 +6,7 @@ import SearchBar from "@/components/SearchBar";
 import MovieSection from "@/components/MovieSection";
 import MovieCard from "@/components/MovieCard";
 import type { Movie } from "@/lib/movies";
+import { filterMovies, partitionMovies } from "@/lib/movies";
 
 export default function Home() {
   const [query, setQuery] = useState("");
@@ -40,32 +41,18 @@ export default function Home() {
     };
   }, [reloadToken]);
 
-  const featured = useMemo(
-    () => movies.filter((movie) => movie.featured),
-    [movies]
-  );
-  const popular = useMemo(
-    () => movies.filter((movie) => !movie.featured),
+  const { featured, popular } = useMemo(
+    () => partitionMovies(movies),
     [movies]
   );
 
   const normalized = query.trim().toLowerCase();
   const searching = normalized.length > 0;
 
-  const results = useMemo(() => {
-    if (!searching) return [];
-    return movies.filter((movie) => {
-      const haystack = [
-        movie.title,
-        movie.year.toString(),
-        movie.tagline,
-        ...movie.genres,
-      ]
-        .join(" ")
-        .toLowerCase();
-      return haystack.includes(normalized);
-    });
-  }, [normalized, searching, movies]);
+  const results = useMemo(
+    () => filterMovies(movies, query),
+    [movies, query]
+  );
 
   return (
     <main id="home" className="min-h-screen bg-[#0b0b0f] text-[#f5f1e8]">

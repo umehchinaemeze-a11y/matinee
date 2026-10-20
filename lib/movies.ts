@@ -159,3 +159,73 @@ export const movies: Movie[] = [
     poster: { from: "#2b1a3a", to: "#d946ef" },
   },
 ];
+
+export type MovieRow = {
+  id: string;
+  title: string;
+  year: number;
+  genres: string[];
+  rating: number;
+  tagline: string;
+  description: string;
+  featured: boolean;
+  poster_from: string;
+  poster_to: string;
+};
+
+/**
+ * Maps a flat database row from the movies table into the structured Movie domain model.
+ */
+export function mapMovieRow(row: MovieRow): Movie {
+  if (!row || typeof row !== "object") {
+    throw new TypeError("Database row must be a non-null object");
+  }
+  return {
+    id: row.id,
+    title: row.title,
+    year: row.year,
+    genres: row.genres,
+    rating: row.rating,
+    tagline: row.tagline,
+    description: row.description,
+    featured: row.featured,
+    poster: {
+      from: row.poster_from,
+      to: row.poster_to,
+    },
+  };
+}
+
+/**
+ * Filters a movie list using in-memory search across title, year, tagline, and genres.
+ */
+export function filterMovies(movieList: Movie[], query: string): Movie[] {
+  if (typeof query !== "string") return [];
+  const normalized = query.trim().toLowerCase();
+  if (normalized.length === 0) return [];
+
+  return movieList.filter((movie) => {
+    const haystack = [
+      movie.title,
+      movie.year.toString(),
+      movie.tagline,
+      ...(Array.isArray(movie.genres) ? movie.genres : []),
+    ]
+      .join(" ")
+      .toLowerCase();
+    return haystack.includes(normalized);
+  });
+}
+
+/**
+ * Partitions a movie list into featured and popular collections.
+ */
+export function partitionMovies(movieList: Movie[]): {
+  featured: Movie[];
+  popular: Movie[];
+} {
+  return {
+    featured: movieList.filter((movie) => movie.featured),
+    popular: movieList.filter((movie) => !movie.featured),
+  };
+}
